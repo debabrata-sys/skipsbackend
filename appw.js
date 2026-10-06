@@ -503,6 +503,7 @@ const callbackurlserver4="https://canvasapi5.azurewebsites.net/auth/google/callb
 // }
 // ));
 
+if (clientidserver4 && clientsecretserver4) {
 passport.use(
     new GoogleStrategy(
       {
@@ -614,6 +615,9 @@ passport.use(
     //    }
     // }
   });
+} else {
+  console.warn('[startup] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set — Google OAuth strategy skipped.');
+}
 
   const fappid=process.env.FACEBOOK_APP_ID || "";
   const fappsecret=process.env.FACEBOOK_APP_SECRET || "";
@@ -624,6 +628,7 @@ passport.use(
   const rurl="http://localhost:3000/auth/facebook/callback";
   const rurl2="https://ctnodeapps2.azurewebsites.net/auth/facebook/callback";
 
+if (fappid2 && fappsecret2) {
   passport.use(
     new FacebookStrategy(
       {
@@ -712,6 +717,9 @@ passport.use(
        }
     }
   });
+} else {
+  console.warn('[startup] FACEBOOK_APP_ID_2 or FACEBOOK_APP_SECRET_2 not set — Facebook OAuth strategy skipped.');
+}
 
 
 
