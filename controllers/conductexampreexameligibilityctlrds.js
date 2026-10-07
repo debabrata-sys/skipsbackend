@@ -12,6 +12,17 @@ const num = (value) => {
 };
 const uniqueSorted = (values = []) => [...new Set(values.map(text).filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 const truthyRoleAll = (role) => /^(all|admin)$/i.test(text(role));
+const uniquePrograms = (rows = []) => {
+  const seen = new Map();
+  rows.forEach((row) => {
+    const code = text(row.programcode);
+    if (!code) return;
+    const name = text(row.program);
+    if (!seen.has(code)) seen.set(code, { program: name, programcode: code });
+    else if (!seen.get(code).program && name) seen.set(code, { program: name, programcode: code });
+  });
+  return [...seen.values()].sort((a, b) => `${a.program} ${a.programcode}`.localeCompare(`${b.program} ${b.programcode}`, undefined, { numeric: true }));
+};
 
 const queryFrom = (source = {}) => {
   const query = { colid: num(source.colid) };
@@ -44,6 +55,7 @@ const payload = (body = {}) => ({
 
 const allowedProgramCodes = async ({ colid, useremail, role }) => {
   if (truthyRoleAll(role)) return null;
+  if (!text(useremail)) return null;
   const access = await ProgramwiseAccess.find({ colid, useremail: text(useremail) }).select("programcode").lean();
   return uniqueSorted(access.map((row) => row.programcode));
 };
@@ -55,21 +67,33 @@ exports.options = async (req, res) => {
     const allowed = await allowedProgramCodes({ colid, useremail: req.query.useremail, role: req.query.role });
     const programFilter = { colid };
     if (Array.isArray(allowed)) programFilter.programcode = allowed.length ? { $in: allowed } : "__no_access__";
-    const [programs, exams, rows] = await Promise.all([
+    const studentFilter = { colid, role: /^Student$/i };
+    if (Array.isArray(allowed)) studentFilter.programcode = allowed.length ? { $in: allowed } : "__no_access__";
+    const [programs, exams, courseMapRows, studentSourceRows] = await Promise.all([
       MPrograms.find(programFilter).select("year program programcode department faculty institution").sort({ year: -1, program: 1 }).lean(),
       ConductExam.find({ colid }).select("academicyear regulation examname exam examcode program programcode semester").sort({ academicyear: -1, examcode: 1 }).lean(),
-      PreExamEligibility.find({ colid }).select("academicyear regulation program programcode semester exam examcode course coursecode student regno email attendance fees status").lean()
+      RegulationCourseMap.find(programFilter).select("academicyear regulation program programcode semester course coursecode").lean(),
+      Users.find(studentFilter).select("academicyear regulation program programcode semester section").lean()
     ]);
-    const scopedRows = Array.isArray(allowed) ? rows.filter((row) => allowed.includes(text(row.programcode))) : rows;
+    const scopedExams = Array.isArray(allowed) ? exams.filter((row) => !text(row.programcode) || allowed.includes(text(row.programcode))) : exams;
+    const scopedCourseMapRows = Array.isArray(allowed) ? courseMapRows.filter((row) => allowed.includes(text(row.programcode))) : courseMapRows;
     res.json({
       success: true,
       programs,
-      exams,
+      exams: scopedExams,
       options: {
-        academicyears: uniqueSorted([...programs.map((row) => row.year), ...exams.map((row) => row.academicyear), ...scopedRows.map((row) => row.academicyear)]),
-        regulations: uniqueSorted([...exams.map((row) => row.regulation), ...scopedRows.map((row) => row.regulation)]),
-        semesters: uniqueSorted(scopedRows.map((row) => row.semester)),
-        statuses: uniqueSorted(["Active", "Inactive", ...scopedRows.map((row) => row.status)])
+        academicyears: uniqueSorted([...programs.map((row) => row.year), ...scopedExams.map((row) => row.academicyear), ...scopedCourseMapRows.map((row) => row.academicyear)]),
+        regulations: uniqueSorted([...scopedExams.map((row) => row.regulation), ...scopedCourseMapRows.map((row) => row.regulation)]),
+        semesters: uniqueSorted(scopedCourseMapRows.map((row) => row.semester)),
+        statuses: ["Active", "Inactive"],
+        studentFilterOptions: {
+          academicyears: uniqueSorted(studentSourceRows.map((row) => row.academicyear)),
+          regulations: uniqueSorted(studentSourceRows.map((row) => row.regulation)),
+          programs: uniquePrograms(studentSourceRows),
+          programcodes: uniqueSorted(studentSourceRows.map((row) => row.programcode)),
+          semesters: uniqueSorted(studentSourceRows.map((row) => row.semester)),
+          sections: uniqueSorted(studentSourceRows.map((row) => row.section))
+        }
       }
     });
   } catch (error) {
@@ -81,10 +105,19 @@ exports.students = async (req, res) => {
   try {
     const colid = num(req.query.colid);
     const filter = { colid, role: /^Student$/i };
-    ["academicyear", "regulation", "programcode", "semester"].forEach((field) => {
+    ["academicyear", "regulation", "program", "programcode", "semester", "section"].forEach((field) => {
       if (text(req.query[field])) filter[field] = text(req.query[field]);
     });
-    const students = await Users.find(filter).select("name email regno academicyear regulation program programcode semester section").sort({ name: 1 }).limit(5000).lean();
+    if (text(req.query.student)) filter.name = new RegExp(text(req.query.student).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    if (text(req.query.name)) filter.name = new RegExp(text(req.query.name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    if (text(req.query.regno)) filter.regno = new RegExp(text(req.query.regno).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    if (text(req.query.email)) filter.email = new RegExp(text(req.query.email).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    let students = await Users.find(filter).select("name email regno academicyear regulation program programcode semester section").sort({ name: 1 }).limit(5000).lean();
+    if (!students.length && text(req.query.regulation)) {
+      const fallback = { ...filter };
+      delete fallback.regulation;
+      students = await Users.find(fallback).select("name email regno academicyear regulation program programcode semester section").sort({ name: 1 }).limit(5000).lean();
+    }
     res.json({ success: true, data: students });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
