@@ -24,6 +24,14 @@ const number = (value) => {
   return Number.isNaN(parsed) ? undefined : parsed;
 };
 const uniq = (values) => [...new Set(values.map((item) => text(item)).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+const shortBarcodeAlphabet = "0123456789";
+const makeShortBarcode = (length = 5) => {
+  let code = "";
+  for (let i = 0; i < length; i += 1) {
+    code += shortBarcodeAlphabet[Math.floor(Math.random() * shortBarcodeAlphabet.length)];
+  }
+  return code;
+};
 const dateKey = (value) => {
   if (!value) return "";
   const parsed = new Date(value);
@@ -261,6 +269,7 @@ const examPayload = (body = {}) => ({
   semester: text(body.semester),
   session: text(body.session),
   type: text(body.type),
+  formactive: text(body.formactive) || "No",
   user: text(body.user)
 });
 
@@ -270,9 +279,11 @@ const examCoursePayload = (body = {}) => ({
   regulation: text(body.regulation),
   exam: text(body.exam || body.examname),
   examcode: text(body.examcode),
+  batch: text(body.batch),
   program: text(body.program),
   programcode: text(body.programcode),
   type: text(body.type),
+  papertype: ["Theory", "Practical", "Viva"].includes(text(body.papertype || body.paperType || body["Paper Type"])) ? text(body.papertype || body.paperType || body["Paper Type"]) : "",
   subject: text(body.subject),
   semester: text(body.semester),
   course: text(body.course),
@@ -317,6 +328,8 @@ const rollPayload = (body = {}) => ({
   examslot: text(body.examslot),
   campus: text(body.campus),
   building: text(body.building),
+  blockno: text(body.blockno || body.blockNo || body["Block No"]),
+  shortbarcode: text(body.shortbarcode || body.shortBarcode || body["Short Barcode"]).toUpperCase() || undefined,
   examroom: text(body.examroom),
   seatno: text(body.seatno),
   examseatno: text(body.examseatno),
@@ -345,6 +358,7 @@ const validateExam = (p) => {
   if (!p.examcode) return "Exam code is required";
   if (!["Odd", "Even"].includes(p.session)) return "Session is required";
   if (!["Regular", "Supplementary"].includes(p.type)) return "Exam type is required";
+  if (!["Yes", "No"].includes(p.formactive)) return "Form active must be Yes or No";
   return "";
 };
 
@@ -380,7 +394,18 @@ const buildFilter = (source = {}, fields = []) => {
   const colid = number(source.colid);
   if (colid !== undefined) filter.colid = colid;
   fields.forEach((field) => {
-    if (source[field]) filter[field] = source[field];
+    const rawValue = source[field] ?? source[`${field}[]`];
+    if (Array.isArray(rawValue)) {
+      const values = rawValue.map(text).filter(Boolean);
+      if (values.length) filter[field] = { $in: values };
+      return;
+    }
+    if (typeof rawValue === "string" && rawValue.includes(",")) {
+      const values = rawValue.split(",").map(text).filter(Boolean);
+      if (values.length) filter[field] = { $in: values };
+      return;
+    }
+    if (rawValue) filter[field] = rawValue;
   });
   return filter;
 };
@@ -409,7 +434,7 @@ const validateCoordinator = (payload) => {
   return "";
 };
 
-const rollListFilterFields = ["academicyear", "regulation", "exam", "examcode", "program", "programcode", "type", "subject", "semester", "course", "coursecode", "student", "regno", "email", "phone", "section", "examsection", "applied", "admitcardeligible", "attended", "attendance", "fees", "disciplinary", "atkt", "examdate", "examslot", "campus", "building", "examroom", "seatno", "examseatno"];
+const rollListFilterFields = ["academicyear", "regulation", "exam", "examcode", "program", "programcode", "type", "subject", "semester", "course", "coursecode", "student", "regno", "email", "phone", "section", "examsection", "applied", "admitcardeligible", "attended", "attendance", "fees", "disciplinary", "atkt", "examdate", "examslot", "campus", "building", "blockno", "shortbarcode", "examroom", "seatno", "examseatno"];
 const defaultRollListComponents = ["Section-A", "Section-B", "Pr"];
 
 const normalizeExamSection = (value) => {
@@ -492,7 +517,7 @@ const pickSeatCandidate = (pool, previousCourse) => {
 
 exports.getExams = async (req, res) => {
   try {
-    const filter = buildFilter(req.query, ["academicyear", "examname", "examcode", "program", "programcode", "faculty", "institution", "department", "semester", "session", "type"]);
+    const filter = buildFilter(req.query, ["academicyear", "examname", "examcode", "program", "programcode", "faculty", "institution", "department", "semester", "session", "type", "formactive"]);
     if (filter.colid === undefined) return res.status(400).json({ success: false, message: "colid is required" });
     const data = await ConductExam.find(filter).sort({ academicyear: -1, examname: 1 }).lean();
     res.json({ success: true, data });
@@ -1424,7 +1449,7 @@ exports.getCourseMapOptions = async (req, res) => {
 
 exports.getExamRolls = async (req, res) => {
   try {
-    const filter = buildFilter(req.query, ["academicyear", "regulation", "exam", "examcode", "program", "programcode", "type", "subject", "semester", "course", "coursecode", "student", "regno", "email", "phone", "section", "examsection", "applied", "admitcardeligible", "attended", "attendance", "fees", "disciplinary", "noofbacklogs", "atkt", "remarks", "examdate", "examslot", "campus", "building", "examroom", "seatno", "examseatno"]);
+    const filter = buildFilter(req.query, ["academicyear", "regulation", "exam", "examcode", "batch", "program", "programcode", "type", "papertype", "subject", "semester", "course", "coursecode", "student", "regno", "email", "phone", "section", "examsection", "applied", "admitcardeligible", "attended", "attendance", "fees", "disciplinary", "noofbacklogs", "atkt", "remarks", "examdate", "examslot", "campus", "building", "blockno", "shortbarcode", "examroom", "seatno", "examseatno"]);
     if (filter.colid === undefined) return res.status(400).json({ success: false, message: "colid is required" });
     const data = await ConductExamRoll.find(filter).sort({ program: 1, semester: 1, course: 1, regno: 1 }).lean();
     res.json({ success: true, data: data.map((row) => ({ ...row, examseatno: row.examseatno || String(row._id) })) });
@@ -1714,32 +1739,42 @@ exports.generateExamRolls = async (req, res) => {
       regulation: text(req.body.regulation),
       exam: text(req.body.exam),
       examcode: text(req.body.examcode),
-      program: text(req.body.program),
-      programcode: text(req.body.programcode),
-      type: text(req.body.type),
-      subject: text(req.body.subject),
-      semester: text(req.body.semester),
       user: text(req.body.user)
     };
-    if (base.colid === undefined || !base.academicyear || !base.regulation || !base.exam || !base.examcode || !base.programcode || !base.type || !base.semester) {
-      return res.status(400).json({ success: false, message: "Exam, regulation, program, type and semester are required" });
+    if (base.colid === undefined || !base.academicyear || !base.regulation || !base.exam || !base.examcode) {
+      return res.status(400).json({ success: false, message: "Exam and regulation are required" });
     }
-    const studentFilter = {
-      colid: base.colid,
-      academicyear: base.academicyear,
-      programcode: base.programcode,
-      semester: base.semester,
-      role: /^student$/i
-    };
-    if (base.type === "Major") studentFilter.Major = base.subject;
-    if (base.type === "Minor") studentFilter.Minor = base.subject;
-    const students = await User.find(studentFilter).select("name regno email phone section program programcode").lean();
     let saved = 0;
+    let studentCount = 0;
     const errors = [];
     for (const course of selectedCourses) {
+      const courseScope = {
+        program: text(course.program || req.body.program),
+        programcode: text(course.programcode || req.body.programcode),
+        type: text(course.type || req.body.type),
+        subject: text(course.subject || req.body.subject),
+        semester: text(course.semester || req.body.semester),
+        regulation: text(course.regulation || base.regulation)
+      };
+      if (!courseScope.programcode || !courseScope.type || !courseScope.semester || !text(course.coursecode)) {
+        errors.push({ coursecode: course.coursecode, message: "Program, type, semester and course code are required for selected course" });
+        continue;
+      }
+      const studentFilter = {
+        colid: base.colid,
+        academicyear: base.academicyear,
+        programcode: courseScope.programcode,
+        semester: courseScope.semester,
+        role: /^student$/i
+      };
+      if (courseScope.type === "Major") studentFilter.Major = courseScope.subject;
+      if (courseScope.type === "Minor") studentFilter.Minor = courseScope.subject;
+      const students = await User.find(studentFilter).select("name regno email phone section program programcode").lean();
+      studentCount += students.length;
       for (const student of students) {
         const payload = rollPayload({
           ...base,
+          ...courseScope,
           course: course.course,
           coursecode: course.coursecode,
           examdate: course.examdate,
@@ -1749,7 +1784,7 @@ exports.generateExamRolls = async (req, res) => {
           email: student.email,
           phone: student.phone,
           section: student.section,
-          program: base.program || student.program,
+          program: courseScope.program || student.program,
           applied: "Yes",
           admitcardeligible: "Yes",
           attended: "No"
@@ -1770,7 +1805,7 @@ exports.generateExamRolls = async (req, res) => {
         saved += 1;
       }
     }
-    res.json({ success: true, saved, studentCount: students.length, errors });
+    res.json({ success: true, saved, studentCount, errors });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1813,6 +1848,61 @@ exports.deleteExamRollsBulk = async (req, res) => {
     const result = await ConductExamRoll.deleteMany({ colid, _id: { $in: ids } });
     res.json({ success: true, deleted: result.deletedCount || 0, message: "Deleted" });
   } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.generateShortBarcodes = async (req, res) => {
+  try {
+    const colid = number(req.body.colid);
+    const ids = Array.isArray(req.body.ids) ? req.body.ids.filter(Boolean) : [];
+    const overwrite = req.body.overwrite !== false;
+    const barcodeLength = Number(req.body.length) === 8 ? 8 : 5;
+    if (colid === undefined) return res.status(400).json({ success: false, message: "colid is required" });
+    if (!ids.length) return res.status(400).json({ success: false, message: "Select at least one exam roll entry" });
+
+    const rows = await ConductExamRoll.find({ colid, _id: { $in: ids } }).select("_id shortbarcode").lean();
+    if (!rows.length) return res.status(404).json({ success: false, message: "No matching exam roll rows found" });
+
+    const existingRows = await ConductExamRoll.find({
+      colid,
+      shortbarcode: { $exists: true, $nin: ["", null] }
+    }).select("shortbarcode").lean();
+    const used = new Set(existingRows.map((row) => text(row.shortbarcode).toUpperCase()).filter(Boolean));
+    const ops = [];
+    const assigned = [];
+
+    for (const row of rows) {
+      const current = text(row.shortbarcode).toUpperCase();
+      if (current && !overwrite) {
+        assigned.push({ id: String(row._id), shortbarcode: current });
+        continue;
+      }
+      if (current) used.delete(current);
+      let code = "";
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const candidate = makeShortBarcode(barcodeLength);
+        if (!used.has(candidate)) {
+          code = candidate;
+          used.add(candidate);
+          break;
+        }
+      }
+      if (!code) throw new Error("Unable to generate unique short barcode. Please try again.");
+      ops.push({
+        updateOne: {
+          filter: { _id: row._id, colid },
+          update: { $set: { shortbarcode: code, user: text(req.body.user) } }
+        }
+      });
+      assigned.push({ id: String(row._id), shortbarcode: code });
+    }
+
+    if (ops.length) await ConductExamRoll.bulkWrite(ops, { ordered: false });
+    const data = await ConductExamRoll.find({ colid, _id: { $in: ids } }).sort({ program: 1, semester: 1, course: 1, regno: 1 }).lean();
+    res.json({ success: true, updated: ops.length, assigned, data });
+  } catch (err) {
+    if (err.code === 11000) return res.status(400).json({ success: false, message: "Short barcode collision detected. Please try again." });
     res.status(500).json({ success: false, message: err.message });
   }
 };

@@ -178,6 +178,7 @@ const miscellaneousAmountController = require('./controllers/miscellaneousamount
 const employeeDatabaseController = require('./controllers/employeedatabasectlrd');
 const awsFileLibraryController = require('./controllers/awsfilelibrarydsctlr');
 const awsConfigController = require('./controllers/awsconfigdsctlr');
+const billingModuleController = require('./controllers/billingmodulectlrds');
 const institutionPolicyController = require('./controllers/institutionpolicyctlrds');
 const centralTicketController = require('./controllers/centralticketctlrds');
 const aiCodingController = require('./controllers/aicodingctlrds');
@@ -285,6 +286,7 @@ app.post('/api/v2/online-exam-publish/bulk-upload', onlineExamPublishController.
 app.post('/api/v2/online-exam-publish/delete', onlineExamPublishController.deleteRows);
 app.get('/api/v2/student-online-exam-marks/options', onlineExamPublishController.studentOptions);
 app.get('/api/v2/student-online-exam-marks', onlineExamPublishController.studentMarks);
+app.get('/api/v2/student-online-exam-marks-from-questions', onlineExamPublishController.studentMarksFromQuestions);
 app.get('/api/v2/online-exam/question-options', onlineExamController.questionOptions);
 app.get('/api/v2/online-exam/exams', onlineExamController.listExams);
 app.post('/api/v2/online-exam/exams', onlineExamController.saveExam);
@@ -307,6 +309,11 @@ app.post('/api/v2/online-exam/report', onlineExamController.report);
 app.post('/api/v2/online-exam/examination-report', onlineExamController.examinationReport);
 app.get('/api/v2/online-exam/examination-details-options', onlineExamController.examinationDetailsOptions);
 app.post('/api/v2/online-exam/examination-details', onlineExamController.examinationDetails);
+app.post('/api/v2/online-exam/examination-details-mapped', onlineExamController.examinationDetailsMapped);
+app.get('/api/v2/online-exam/bloom-co-summary-options', onlineExamController.bloomCoSummaryOptions);
+app.post('/api/v2/online-exam/bloom-co-summary', onlineExamController.bloomCoSummary);
+app.post('/api/v2/online-exam/co-attainment', onlineExamController.coAttainment);
+app.post('/api/v2/online-exam/bloom-attainment', onlineExamController.bloomAttainment);
 app.get('/api/v2/online-exam/course-group-assignment-options', onlineExamController.courseGroupAssignmentOptions);
 app.get('/api/v2/online-exam/course-group-assignments', onlineExamController.listCourseGroupAssignments);
 app.post('/api/v2/online-exam/course-group-assignments', onlineExamController.saveCourseGroupAssignment);
@@ -354,6 +361,8 @@ app.post('/api/v2/online-exam-2/declarations', onlineExam2Controller.declaration
 app.post('/api/v2/online-exam-2/grade-attempt', onlineExam2Controller.gradeAttempt);
 app.post('/api/v2/online-exam-2/ai-evaluate', onlineExam2Controller.aiEvaluate);
 app.post('/api/v2/online-exam-2/report', onlineExam2Controller.report);
+app.post('/api/v2/online-exam-2/co-attainment', onlineExam2Controller.coAttainment);
+app.post('/api/v2/online-exam-2/bloom-attainment', onlineExam2Controller.bloomAttainment);
 app.get('/api/v2/visitor-management/options', visitorManagementController.options);
 app.get('/api/v2/visitor-management/list', visitorManagementController.list);
 app.post('/api/v2/visitor-management/save', visitorManagementController.save);
@@ -1039,6 +1048,14 @@ app.post('/api/v2/internal-marks-entry/dates', conductExamComponentAllocationCon
 app.post('/api/v2/internal-marks-entry/dates-delete', conductExamComponentAllocationController.deleteInternalMarksEntryDate);
 app.post('/api/v2/internal-marks-entry/dates-bulk', conductExamComponentAllocationController.bulkInternalMarksEntryDates);
 app.get('/api/v2/internal-marks-entry/dates-check', conductExamComponentAllocationController.checkInternalMarksEntryDate);
+app.get('/api/v2/internal-marks-approval/options', conductExamComponentAllocationController.internalMarksApprovalOptions);
+app.get('/api/v2/internal-marks-approval/workflow', conductExamComponentAllocationController.listInternalMarksApprovalWorkflow);
+app.post('/api/v2/internal-marks-approval/workflow', conductExamComponentAllocationController.saveInternalMarksApprovalWorkflow);
+app.post('/api/v2/internal-marks-approval/workflow-delete', conductExamComponentAllocationController.deleteInternalMarksApprovalWorkflow);
+app.post('/api/v2/internal-marks-approval/workflow-bulk', conductExamComponentAllocationController.bulkInternalMarksApprovalWorkflow);
+app.post('/api/v2/internal-marks-approval/submit', conductExamComponentAllocationController.submitInternalMarksForApproval);
+app.get('/api/v2/internal-marks-approval/requests', conductExamComponentAllocationController.listInternalMarksApprovalRequests);
+app.post('/api/v2/internal-marks-approval/decision', conductExamComponentAllocationController.decideInternalMarksApproval);
 app.get('/api/v2/examination-model2/component-online-exams', conductExamComponentAllocationController.onlineExamSources);
 app.get('/api/v2/examination-model2/component-online-exam-marks', conductExamComponentAllocationController.onlineExamAttemptMarks);
 app.post('/api/v2/examination-model2/component-online-exam-transfer', conductExamComponentAllocationController.transferOnlineExamMarks);
@@ -1052,7 +1069,13 @@ app.get('/api/v2/examination-model2/viva-marks', examinationModel2Controller.viv
 app.post('/api/v2/examination-model2/viva-marks', examinationModel2Controller.vivaSave);
 app.post('/api/v2/examination-model2/viva-marks-delete', examinationModel2Controller.vivaDelete);
 app.post('/api/v2/examination-model2/viva-marks-bulk', examinationModel2Controller.vivaBulk);
+app.get('/api/v2/examination-model2/scoretype-marks', examinationModel2Controller.scoreTypeMarksList);
+app.post('/api/v2/examination-model2/scoretype-marks', examinationModel2Controller.scoreTypeMarksSave);
+app.post('/api/v2/examination-model2/scoretype-marks-delete', examinationModel2Controller.scoreTypeMarksDelete);
+app.post('/api/v2/examination-model2/scoretype-marks-bulk', examinationModel2Controller.scoreTypeMarksBulk);
+app.post('/api/v2/examination-model2/scoretype-marks-process-grade', examinationModel2Controller.processScoreTypeMarksGrade);
 app.post('/api/v2/examination-model2/interim-marks-transfer', examinationModel2Controller.processInterimMarksTransfer);
+app.post('/api/v2/examination-model2/scoretype-transfer', examinationModel2Controller.processScoreTypeTransfer);
 app.post('/api/v2/examination-model2/interim-component-scoretype-update', examinationModel2Controller.updateInterimComponentScoreType);
 app.get('/api/v2/examination-model2/passmarks-configurations', examinationModel2Controller.passMarksConfigurations);
 app.post('/api/v2/examination-model2/passmarks-configurations', examinationModel2Controller.savePassMarksConfiguration);
@@ -1130,6 +1153,17 @@ app.get('/api/v2/aws-config', awsConfigController.getAwsConfigs);
 app.post('/api/v2/aws-config', awsConfigController.createAwsConfig);
 app.post('/api/v2/aws-config-update', awsConfigController.updateAwsConfig);
 app.post('/api/v2/aws-config-delete', awsConfigController.deleteAwsConfig);
+app.get('/api/v2/billing/subscription', billingModuleController.getSubscription);
+app.post('/api/v2/billing/subscription', billingModuleController.saveSubscription);
+app.get('/api/v2/billing/invoices', billingModuleController.listInvoices);
+app.post('/api/v2/billing/invoices/search', billingModuleController.listInvoices);
+app.post('/api/v2/billing/invoices', billingModuleController.saveInvoice);
+app.post('/api/v2/billing/invoices/delete', billingModuleController.deleteInvoices);
+app.post('/api/v2/billing/pay-details', billingModuleController.savePayDetails);
+app.post('/api/v2/billing/tds-report', billingModuleController.tdsReport);
+app.get('/api/v2/billing/non-student-roles', billingModuleController.listNonStudentRoles);
+app.post('/api/v2/billing/users-for-extension', billingModuleController.listUsersForExtension);
+app.post('/api/v2/billing/extend-user-last-login', billingModuleController.extendUserLastLogin);
 app.get('/api/v2/institution-policies/types', institutionPolicyController.getPolicyTypes);
 app.get('/api/v2/institution-policies', institutionPolicyController.getPolicies);
 app.post('/api/v2/institution-policies', institutionPolicyController.uploadMiddleware, institutionPolicyController.savePolicy);
@@ -1852,7 +1886,7 @@ passport.serializeUser(function(user, done) {
 
   //web app 3 localhost
 const clientidlocal= process.env.GOOGLE_CLIENT_ID_LOCAL || "";
-const  clientsecretlocal = process.env.GOOGLE_CLIENT_SECRET_LOCAL || "";
+const clientsecretlocal = process.env.GOOGLE_CLIENT_SECRET_LOCAL || "";
 const callbackurllocal="/auth/google/callback";
 
 
@@ -5725,6 +5759,7 @@ const conductexamonscreenctlrds = require("./controllers/conductexamonscreenctlr
 const conductexamhallticketctlrds = require("./controllers/conductexamhallticketctlrds");
 const conductexamformctlrds = require("./controllers/conductexamformctlrds");
 const conductexampreexameligibilityctlrds = require("./controllers/conductexampreexameligibilityctlrds");
+const conductexamscholarshipctlrds = require("./controllers/conductexamscholarshipctlrds");
 const conductexamdoctorctlrds = require("./controllers/conductexamdoctorctlrds");
 const conductexamscanningctlrds = require("./controllers/conductexamscanningctlrds");
 const feedbackadvancedctlrds = require("./controllers/feedbackadvancedctlrds");
@@ -6106,6 +6141,12 @@ app.get("/api/v2/conductexam/pre-exam-eligibility", conductexampreexameligibilit
 app.post("/api/v2/conductexam/pre-exam-eligibility", conductexampreexameligibilityctlrds.save);
 app.post("/api/v2/conductexam/pre-exam-eligibility-delete", conductexampreexameligibilityctlrds.remove);
 app.post("/api/v2/conductexam/pre-exam-eligibility-bulk", conductexampreexameligibilityctlrds.bulk);
+app.get("/api/v2/conductexam/exam-scholarship-options", conductexamscholarshipctlrds.options);
+app.get("/api/v2/conductexam/exam-scholarship-students", conductexamscholarshipctlrds.students);
+app.get("/api/v2/conductexam/exam-scholarship", conductexamscholarshipctlrds.list);
+app.post("/api/v2/conductexam/exam-scholarship", conductexamscholarshipctlrds.save);
+app.post("/api/v2/conductexam/exam-scholarship-delete", conductexamscholarshipctlrds.remove);
+app.post("/api/v2/conductexam/exam-scholarship-bulk", conductexamscholarshipctlrds.bulk);
 app.get("/api/v2/conductexam/exam-dates-options", conductexamdatesctlrds.options);
 app.get("/api/v2/conductexam/exam-dates", conductexamdatesctlrds.list);
 app.post("/api/v2/conductexam/exam-dates", conductexamdatesctlrds.save);
@@ -6188,6 +6229,7 @@ app.post("/api/v2/conductexam/examrolls-generate", conductexamctlrds.generateExa
 app.post("/api/v2/conductexam/examrolls", conductexamctlrds.saveExamRoll);
 app.post("/api/v2/conductexam/examrolls-delete", conductexamctlrds.deleteExamRoll);
 app.post("/api/v2/conductexam/examrolls-bulk-delete", conductexamctlrds.deleteExamRollsBulk);
+app.post("/api/v2/conductexam/examrolls-shortbarcodes", conductexamctlrds.generateShortBarcodes);
 app.post("/api/v2/conductexam/examrolls-bulk", conductexamctlrds.bulkExamRolls);
 app.get("/api/v2/conductexam/examroll-rules/options", exameligibilityctlrds.getExamrollRuleOptions);
 app.get("/api/v2/conductexam/examroll-rules/rows", exameligibilityctlrds.getExamrollRuleRows);
@@ -6202,6 +6244,7 @@ app.get("/api/v2/conductexam/hallticket-eligible-students", conductexamhallticke
 app.get("/api/v2/conductexam/hallticket", conductexamhallticketctlrds.getHallTicket);
 app.post("/api/v2/conductexam/hallticket-blockchain-store", conductexamhallticketctlrds.storeHallTicketBlockchain);
 app.get("/api/v2/public/hallticket-blockchain-verify", conductexamhallticketctlrds.verifyHallTicketBlockchain);
+app.get("/api/v2/public/hallticket-verify", conductexamhallticketctlrds.verifyHallTicket);
 app.get("/api/v2/conductexam/student-view-control", conductexamhallticketctlrds.getControls);
 app.post("/api/v2/conductexam/student-view-control", conductexamhallticketctlrds.saveControl);
 app.post("/api/v2/conductexam/student-view-control-delete", conductexamhallticketctlrds.deleteControl);
@@ -6617,6 +6660,9 @@ app.get("/api/v2/neplms/attendance/online-class-joins", neplmsattendancectlrds.g
 app.post("/api/v2/neplms/attendance/otp/create", neplmsattendancectlrds.createAttendanceOtps);
 app.get("/api/v2/neplms/attendance/otp/student-sessions", neplmsattendancectlrds.getStudentOtpSessions);
 app.post("/api/v2/neplms/attendance/otp/submit", neplmsattendancectlrds.submitStudentOtps);
+app.post("/api/v2/neplms/enrollment-attendance/otp/create", neplmsattendancectlrds.createEnrollmentAttendanceOtp);
+app.get("/api/v2/neplms/enrollment-attendance/otp/student-sessions", neplmsattendancectlrds.getStudentEnrollmentOtpSessions);
+app.post("/api/v2/neplms/enrollment-attendance/otp/submit", neplmsattendancectlrds.submitStudentEnrollmentOtp);
 app.get("/api/v2/neplms/otp-attendance-configuration/options", neplmsOtpAttendanceConfigurationController.options);
 app.get("/api/v2/neplms/otp-attendance-configuration", neplmsOtpAttendanceConfigurationController.list);
 app.post("/api/v2/neplms/otp-attendance-configuration", neplmsOtpAttendanceConfigurationController.save);
@@ -7147,6 +7193,7 @@ const easebuzzpaymentprocessctlrds = require("./controllers/easebuzzpaymentproce
 const mastergatewayctlrds = require("./controllers/mastergatewayctlrds");
 const icicigatewayconfigctlrds = require("./controllers/icicigatewayconfigctlrds");
 const icicipaymentprocessctlrds = require("./controllers/icicipaymentprocessctlrds");
+const cashfreectlrds = require("./controllers/cashfreectlrds");
 const studentonlinepaymentctlrds = require("./controllers/studentonlinepaymentctlrds");
 const parentportalctlrds = require("./controllers/parentportalctlrds");
 const repairmaintenancectlrds = require("./controllers/repairmaintenancectlrds");
@@ -7406,6 +7453,16 @@ app.get("/api/v2/icicigatewayconfig", icicigatewayconfigctlrds.getIciciGatewayCo
 app.post("/api/v2/icicigatewayconfig", icicigatewayconfigctlrds.createIciciGatewayConfig);
 app.post("/api/v2/icicigatewayconfig/update", icicigatewayconfigctlrds.updateIciciGatewayConfig);
 app.post("/api/v2/icicigatewayconfig/delete", icicigatewayconfigctlrds.deleteIciciGatewayConfig);
+app.get("/api/v2/cashfree/config", cashfreectlrds.listConfigs);
+app.post("/api/v2/cashfree/config", cashfreectlrds.saveConfig);
+app.post("/api/v2/cashfree/config/delete", cashfreectlrds.deleteConfig);
+app.post("/api/v2/cashfree/order", cashfreectlrds.createOrder);
+app.get("/api/v2/cashfree/verify", cashfreectlrds.verifyOrder);
+app.post("/api/v2/cashfree/verify", cashfreectlrds.verifyOrder);
+app.get("/api/v2/cashfree/logs", cashfreectlrds.listLogs);
+app.post("/api/v2/cashfree/logs", cashfreectlrds.listLogs);
+app.post("/api/v2/cashfree/callback", cashfreectlrds.callback);
+app.get("/api/v2/cashfree/callback", cashfreectlrds.callback);
 app.get("/api/v2/easebuzzpayment", easebuzzpaymentprocessctlrds.getEasebuzzPayments);
 app.post("/api/v2/easebuzzpayment/initiate", easebuzzpaymentprocessctlrds.initiateEasebuzzPayment);
 app.post("/api/v2/easebuzzpayment/callback", easebuzzpaymentprocessctlrds.handleEasebuzzPaymentCallback);

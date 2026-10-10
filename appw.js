@@ -466,7 +466,7 @@ passport.serializeUser(function(user, done) {
 
   //web app 3 localhost
 const clientidlocal= process.env.GOOGLE_CLIENT_ID_LOCAL || "";
-const  clientsecretlocal = process.env.GOOGLE_CLIENT_SECRET_LOCAL || "";
+const clientsecretlocal = process.env.GOOGLE_CLIENT_SECRET_LOCAL || "";
 const callbackurllocal="/auth/google/callback";
 
 
