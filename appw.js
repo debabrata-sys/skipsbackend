@@ -615,6 +615,9 @@ passport.use(
     //    }
     // }
   });
+} else {
+  console.warn('[startup] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set — Google OAuth strategy skipped.');
+}
 
   const fappid=process.env.FACEBOOK_APP_ID || "";
   const fappsecret=process.env.FACEBOOK_APP_SECRET || "";
@@ -714,6 +717,9 @@ passport.use(
        }
     }
   });
+} else {
+  console.warn('[startup] FACEBOOK_APP_ID_2 or FACEBOOK_APP_SECRET_2 not set — Facebook OAuth strategy skipped.');
+}
 
 
 
