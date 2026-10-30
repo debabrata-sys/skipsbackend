@@ -507,8 +507,8 @@ if (clientidserver4 && clientsecretserver4) {
 passport.use(
     new GoogleStrategy(
       {
-        clientID: clientidserver4, // process.env.GOOGLE_CLIENT_ID_SERVER || "", // process.env.GOOGLE_CLIENT_ID_LOCAL || "",
-        clientSecret: clientsecretserver4, // process.env.GOOGLE_CLIENT_SECRET_SERVER || "", // process.env.GOOGLE_CLIENT_SECRET_LOCAL || "",
+        clientID: clientidserver4, // "", // "",
+        clientSecret: clientsecretserver4, 
         callbackURL: callbackurlserver4, // 'https://ctnodeapp1.azurewebsites.net/auth/google/callback'
         scope: [ 'profile', 'email' ]
       },
@@ -615,9 +615,6 @@ passport.use(
     //    }
     // }
   });
-} else {
-  console.warn('[startup] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set — Google OAuth strategy skipped.');
-}
 
   const fappid=process.env.FACEBOOK_APP_ID || "";
   const fappsecret=process.env.FACEBOOK_APP_SECRET || "";
@@ -628,12 +625,12 @@ passport.use(
   const rurl="http://localhost:3000/auth/facebook/callback";
   const rurl2="https://ctnodeapps2.azurewebsites.net/auth/facebook/callback";
 
-if (fappid2 && fappsecret2) {
-  passport.use(
+  if (fappid2 && fappsecret2) {
+passport.use(
     new FacebookStrategy(
       {
-        clientID: fappid2, // process.env.GOOGLE_CLIENT_ID_SERVER || "", // process.env.GOOGLE_CLIENT_ID_LOCAL || "",
-        clientSecret: fappsecret2, // process.env.GOOGLE_CLIENT_SECRET_SERVER || "", // process.env.GOOGLE_CLIENT_SECRET_LOCAL || "",
+        clientID: fappid2, // "", // "",
+        clientSecret: fappsecret2, 
         callbackURL: rurl2, // 'https://ctnodeapp1.azurewebsites.net/auth/google/callback'
         profileFields:['id', 'emails', 'link', 'locale', 'name', 'photos',
         'timezone', 'updated_time', 'verified', 'displayName']
@@ -717,9 +714,6 @@ if (fappid2 && fappsecret2) {
        }
     }
   });
-} else {
-  console.warn('[startup] FACEBOOK_APP_ID_2 or FACEBOOK_APP_SECRET_2 not set — Facebook OAuth strategy skipped.');
-}
 
 
 
@@ -878,8 +872,8 @@ const multer=require('multer');
 const aws=require('aws-sdk');
 const multerS3=require('multer-s3');
 aws.config.update({
-  accessKey: process.env.AWS_ACCESS_KEY_ID, // process.env.AWS_ACCESS_KEY_ID || "",
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // process.env.AWS_SECRET_ACCESS_KEY || "",
+  accessKey: process.env.AWS_ACCESS_KEY_ID, 
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, 
   region: 'us-east-2'
 });
 

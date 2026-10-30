@@ -179,6 +179,8 @@ const employeeDatabaseController = require('./controllers/employeedatabasectlrd'
 const awsFileLibraryController = require('./controllers/awsfilelibrarydsctlr');
 const awsConfigController = require('./controllers/awsconfigdsctlr');
 const billingModuleController = require('./controllers/billingmodulectlrds');
+const bhashWhatsappController = require('./controllers/bhashwhatsappctlrds');
+const whatsappcreditctlrds = require('./controllers/whatsappcreditctlrds');
 const institutionPolicyController = require('./controllers/institutionpolicyctlrds');
 const centralTicketController = require('./controllers/centralticketctlrds');
 const aiCodingController = require('./controllers/aicodingctlrds');
@@ -808,6 +810,7 @@ app.post('/admission-form-documents-delete', admissionFormDocumentController.del
 app.post('/admission-form-documents-bulk', admissionFormDocumentController.bulkDocuments);
 app.get('/api/v2/mprograms-management', mprogramsManagementController.getPrograms);
 app.get('/api/v2/mprograms-management/options', mprogramsManagementController.getProgramOptions);
+app.get('/api/v2/mprograms-management/incharges', mprogramsManagementController.getProgramIncharges);
 app.post('/api/v2/mprograms-management', mprogramsManagementController.createProgram);
 app.post('/api/v2/mprograms-management-update', mprogramsManagementController.updateProgram);
 app.post('/api/v2/mprograms-management-delete', mprogramsManagementController.deleteProgram);
@@ -967,6 +970,7 @@ app.get('/api/v2/user-profile-display-profile', userProfileDisplayLayoutControll
 app.post('/api/v2/user-profile-approval-status', userProfileApprovalController.updateUserApprovalStatus);
 app.get('/api/v2/user-data/meta', userDataManagementController.getMeta);
 app.get('/api/v2/user-data/options', userDataManagementController.getOptions);
+app.post('/api/v2/user-data/options', userDataManagementController.getOptions);
 app.get('/api/v2/staff-list', userDataManagementController.getStaffList);
 app.post('/api/v2/staff-list-bulk', userDataManagementController.bulkStaffList);
 app.get('/api/v2/exclude-user/options', userDataManagementController.excludeUserOptions);
@@ -993,6 +997,8 @@ app.post('/api/v2/authenticator/verify', authenticatorController.verify);
 app.post('/api/v2/authenticator/trust-check', authenticatorController.trustCheck);
 app.post('/api/v2/authenticator/admin-update', authenticatorController.adminUpdate);
 app.post('/api/v2/authenticator/admin-bulk-update', authenticatorController.adminBulkUpdate);
+app.get('/api/v2/authenticator/admin-global-email', authenticatorController.adminGlobalEmailLookup);
+app.post('/api/v2/authenticator/admin-global-email', authenticatorController.adminGlobalEmailUpdate);
 app.get('/api/v2/student-data-upload', studentDataUploadController.getStudents);
 app.post('/api/v2/student-data-upload', studentDataUploadController.createStudent);
 app.post('/api/v2/student-data-upload-update', studentDataUploadController.updateStudent);
@@ -1004,6 +1010,8 @@ app.post('/api/v2/student-data-upload-selected-subject-update', studentDataUploa
 app.post('/api/v2/student-data-upload-specialization', studentDataUploadController.updateStudentSpecialization);
 app.post('/api/v2/student-data-upload-ai-field', studentDataUploadController.generateFieldWithAi);
 app.post('/api/v2/student-data-upload-photo', studentDataUploadController.uploadPhotoMiddleware, studentDataUploadController.uploadPhoto);
+app.use('/api/v2/student-bulk-fields', require('./controllers/studentbulkfieldsctlrds'));
+app.use('/api/v2/biometric-id-mapping', require('./controllers/biometricidmappingctlrds'));
 app.get('/api/v2/raw-data/options', rawDataManagementController.options);
 app.get('/api/v2/raw-data/sources', rawDataManagementController.listSources);
 app.post('/api/v2/raw-data/sources', rawDataManagementController.saveSource);
@@ -1036,10 +1044,14 @@ app.get('/api/v2/examination-model2/component-marks-rows', conductExamComponentA
 app.post('/api/v2/examination-model2/component-marks-savebulk', conductExamComponentAllocationController.saveExaminerMarks);
 app.post('/api/v2/examination-model2/component-marks-submit', conductExamComponentAllocationController.submitExaminerMarks);
 app.get('/api/v2/examination-model2/component-marks', conductExamComponentAllocationController.listMarks);
+app.get('/api/v2/student-internal-marks', require('./controllers/studentinternalmarksctlrds').list);
+app.get('/api/v2/student-internal-marks-2', require('./controllers/studentinternalmarksctlrds').list2);
+app.get('/api/v2/student-internal-marks-3', require('./controllers/studentinternalmarksctlrds').list3);
 app.post('/api/v2/examination-model2/component-marks', conductExamComponentAllocationController.saveMark);
 app.post('/api/v2/examination-model2/component-marks-delete', conductExamComponentAllocationController.deleteMark);
 app.post('/api/v2/examination-model2/component-marks-bulk', conductExamComponentAllocationController.bulkMarks);
 app.get('/api/v2/internal-marks-entry/options', conductExamComponentAllocationController.internalMarksOptions);
+app.use('/api/v2/internal-questionwise', require('./controllers/internalquestionwisectlrds'));
 app.get('/api/v2/internal-marks-entry/components', conductExamComponentAllocationController.internalMarksComponents);
 app.get('/api/v2/internal-marks-entry/students', conductExamComponentAllocationController.internalMarksStudents);
 app.post('/api/v2/internal-marks-entry/save', conductExamComponentAllocationController.saveInternalMarks);
@@ -1164,6 +1176,28 @@ app.post('/api/v2/billing/tds-report', billingModuleController.tdsReport);
 app.get('/api/v2/billing/non-student-roles', billingModuleController.listNonStudentRoles);
 app.post('/api/v2/billing/users-for-extension', billingModuleController.listUsersForExtension);
 app.post('/api/v2/billing/extend-user-last-login', billingModuleController.extendUserLastLogin);
+app.get('/api/v2/bhash-whatsapp/config', bhashWhatsappController.listConfigs);
+app.post('/api/v2/bhash-whatsapp/config', bhashWhatsappController.saveConfig);
+app.post('/api/v2/bhash-whatsapp/config/delete', bhashWhatsappController.deleteConfig);
+app.get('/api/v2/bhash-whatsapp/local-templates', bhashWhatsappController.listLocalTemplates);
+app.post('/api/v2/bhash-whatsapp/local-templates', bhashWhatsappController.saveLocalTemplate);
+app.post('/api/v2/bhash-whatsapp/local-templates/delete', bhashWhatsappController.deleteLocalTemplate);
+app.get('/api/v2/bhash-whatsapp/filter-options', bhashWhatsappController.filterOptions);
+app.post('/api/v2/bhash-whatsapp/users', bhashWhatsappController.searchUsers);
+app.post('/api/v2/bhash-whatsapp/send', bhashWhatsappController.sendWhatsapp);
+app.post('/api/v2/bhash-whatsapp/send-template-payload', bhashWhatsappController.sendTemplatePayload);
+app.get('/api/v2/bhash-whatsapp/logs', bhashWhatsappController.listLogs);
+app.post('/api/v2/bhash-whatsapp/authenticate', bhashWhatsappController.authenticate);
+app.post('/api/v2/bhash-whatsapp/refresh', bhashWhatsappController.refresh);
+app.get('/api/v2/bhash-whatsapp/templates', bhashWhatsappController.getTemplates);
+app.post('/api/v2/bhash-whatsapp/create-template', bhashWhatsappController.createApiTemplate);
+app.get('/api/v2/whatsapp-credits/balance', whatsappcreditctlrds.getBalance);
+app.post('/api/v2/whatsapp-credits/quote', whatsappcreditctlrds.quote);
+app.post('/api/v2/whatsapp-credits/prepare-payment', whatsappcreditctlrds.preparePayment);
+app.get('/api/v2/whatsapp-credits/payments', whatsappcreditctlrds.listPayments);
+app.post('/api/v2/whatsapp-credits/payments', whatsappcreditctlrds.listPayments);
+app.get('/api/v2/whatsapp-credits/transactions', whatsappcreditctlrds.listTransactions);
+app.post('/api/v2/whatsapp-credits/transactions', whatsappcreditctlrds.listTransactions);
 app.get('/api/v2/institution-policies/types', institutionPolicyController.getPolicyTypes);
 app.get('/api/v2/institution-policies', institutionPolicyController.getPolicies);
 app.post('/api/v2/institution-policies', institutionPolicyController.uploadMiddleware, institutionPolicyController.savePolicy);
@@ -1927,8 +1961,8 @@ if (clientidserver4 && clientsecretserver4) {
 passport.use(
     new GoogleStrategy(
       {
-        clientID: clientidserver4, // process.env.GOOGLE_CLIENT_ID_SERVER || "", // process.env.GOOGLE_CLIENT_ID_LOCAL || "",
-        clientSecret: clientsecretserver4, // process.env.GOOGLE_CLIENT_SECRET_SERVER || "", // process.env.GOOGLE_CLIENT_SECRET_LOCAL || "",
+        clientID: clientidserver4, // "", // "",
+        clientSecret: clientsecretserver4, 
         callbackURL: callbackurlserver4, // 'https://ctnodeapp1.azurewebsites.net/auth/google/callback'
         scope: [ 'profile', 'email' ]
       },
@@ -2035,9 +2069,6 @@ passport.use(
     //    }
     // }
   });
-} else {
-  console.warn('[startup] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set — Google OAuth strategy skipped.');
-}
 
   const fappid=process.env.FACEBOOK_APP_ID || "";
   const fappsecret=process.env.FACEBOOK_APP_SECRET || "";
@@ -2048,12 +2079,12 @@ passport.use(
   const rurl="http://localhost:3000/auth/facebook/callback";
   const rurl2="https://ctnodeapps2.azurewebsites.net/auth/facebook/callback";
 
-if (fappid2 && fappsecret2) {
-  passport.use(
+  if (fappid2 && fappsecret2) {
+passport.use(
     new FacebookStrategy(
       {
-        clientID: fappid2, // process.env.GOOGLE_CLIENT_ID_SERVER || "", // process.env.GOOGLE_CLIENT_ID_LOCAL || "",
-        clientSecret: fappsecret2, // process.env.GOOGLE_CLIENT_SECRET_SERVER || "", // process.env.GOOGLE_CLIENT_SECRET_LOCAL || "",
+        clientID: fappid2, // "", // "",
+        clientSecret: fappsecret2, 
         callbackURL: rurl2, // 'https://ctnodeapp1.azurewebsites.net/auth/google/callback'
         profileFields:['id', 'emails', 'link', 'locale', 'name', 'photos',
         'timezone', 'updated_time', 'verified', 'displayName']
@@ -2137,9 +2168,6 @@ if (fappid2 && fappsecret2) {
        }
     }
   });
-} else {
-  console.warn('[startup] FACEBOOK_APP_ID_2 or FACEBOOK_APP_SECRET_2 not set — Facebook OAuth strategy skipped.');
-}
 
 
 
@@ -2298,8 +2326,8 @@ const multer=require('multer');
 const aws=require('aws-sdk');
 const multerS3=require('multer-s3');
 aws.config.update({
-  accessKey: process.env.AWS_ACCESS_KEY_ID, // process.env.AWS_ACCESS_KEY_ID || "",
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // process.env.AWS_SECRET_ACCESS_KEY || "",
+  accessKey: process.env.AWS_ACCESS_KEY_ID, 
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, 
   region: 'us-east-2'
 });
 
@@ -5734,6 +5762,7 @@ const regulationmasterctlrds = require("./controllers/regulationmasterctlrds");
 const regulationsubjectctlrds = require("./controllers/regulationsubjectctlrds");
 const regulationseatctlrds = require("./controllers/regulationseatctlrds");
 const regulationcoursemapctlrds = require("./controllers/regulationcoursemapctlrds");
+const combinedcourseassessmentctlrds = require("./controllers/combinedcourseassessmentctlrds");
 const accreditationstatusctlrds = require("./controllers/accreditationstatusctlrds");
 const gracemarkspolicyctlrds = require("./controllers/gracemarkspolicyctlrds");
 const atktrulectlrds = require("./controllers/atktrulectlrds");
@@ -5744,6 +5773,8 @@ const specializationnewctlrds = require("./controllers/specializationnewctlrds")
 const conductexamctlrds = require("./controllers/conductexamctlrds");
 const conductexamdatesctlrds = require("./controllers/conductexamdatesctlrds");
 const conductexamformfillupdatesctlrds = require("./controllers/conductexamformfillupdatesctlrds");
+const conductexamfinectlrds = require("./controllers/conductexamfinectlrds");
+const latefeepolicyctlrds = require('./controllers/latefeepolicyctlrds');
 const conductexaminvigilationctlrds = require("./controllers/conductexaminvigilationctlrds");
 const conductexaminvigilatorallocationctlrds = require("./controllers/conductexaminvigilatorallocationctlrds");
 const conductexamflyingsquadctlrds = require("./controllers/conductexamflyingsquadctlrds");
@@ -5829,6 +5860,7 @@ const hrLeaveUpload = multer({ storage: multer.memoryStorage() });
 const hrleavemanagementctlrds = require("./controllers/hrleavemanagementctlrds");
 const userjoiningdatectlrds = require("./controllers/userjoiningdatectlrds");
 const hremployeeattendancectlrds = require("./controllers/hremployeeattendancectlrds");
+app.use('/api/v2/hr-biometric-attendance', require('./controllers/hrbiometricattendancectlrds'));
 const hrshiftctlrds = require("./controllers/hrshiftctlrds");
 const ds1profileeditconfigctlr = require("./controllers/ds1profileeditconfigctlr");
 const ds1profileeditlogctlr = require("./controllers/ds1profileeditlogctlr");
@@ -6043,6 +6075,7 @@ app.post("/api/v2/regulationcoursemap/update", regulationcoursemapctlrds.updateR
 app.post("/api/v2/regulationcoursemap/delete", regulationcoursemapctlrds.deleteRegulationCourseMap);
 app.post("/api/v2/regulationcoursemap/bulk-delete", regulationcoursemapctlrds.bulkDeleteRegulationCourseMaps);
 app.post("/api/v2/regulationcoursemap/bulkupload", regulationcoursemapctlrds.bulkCreateRegulationCourseMaps);
+app.post("/api/v2/combined-course-assessment", combinedcourseassessmentctlrds.saveCombinedCourseAssessment);
 app.get("/api/v2/accreditationstatus", accreditationstatusctlrds.getAll);
 app.post("/api/v2/accreditationstatus", accreditationstatusctlrds.create);
 app.post("/api/v2/accreditationstatus/update", accreditationstatusctlrds.update);
@@ -6153,6 +6186,15 @@ app.post("/api/v2/conductexam/exam-dates", conductexamdatesctlrds.save);
 app.post("/api/v2/conductexam/exam-dates-delete", conductexamdatesctlrds.remove);
 app.post("/api/v2/conductexam/exam-dates-bulk", conductexamdatesctlrds.bulkUpload);
 app.get("/api/v2/conductexam/form-fillup-dates-options", conductexamformfillupdatesctlrds.options);
+app.get("/api/v2/conductexam/exam-fine-options", conductexamfinectlrds.options);
+app.get("/api/v2/conductexam/exam-fine", conductexamfinectlrds.list);
+app.post("/api/v2/conductexam/exam-fine", conductexamfinectlrds.save);
+app.post("/api/v2/conductexam/exam-fine-delete", conductexamfinectlrds.remove);
+app.post("/api/v2/conductexam/exam-fine-bulk", conductexamfinectlrds.bulk);
+app.post("/api/v2/conductexam/student-programwise-exam-form-2-submit", (req, res) => {
+  req.programwiseExamFine = true;
+  return conductexamformctlrds.submitStudentExamForm(req, res);
+});
 app.get("/api/v2/conductexam/form-fillup-dates", conductexamformfillupdatesctlrds.list);
 app.post("/api/v2/conductexam/form-fillup-dates", conductexamformfillupdatesctlrds.save);
 app.post("/api/v2/conductexam/form-fillup-dates-delete", conductexamformfillupdatesctlrds.remove);
@@ -6242,6 +6284,9 @@ app.post("/api/v2/conductexam/examroll-rules/bulk-update", exameligibilityctlrds
 app.get("/api/v2/conductexam/hallticket-options", conductexamhallticketctlrds.options);
 app.get("/api/v2/conductexam/hallticket-eligible-students", conductexamhallticketctlrds.getEligibleStudents);
 app.get("/api/v2/conductexam/hallticket", conductexamhallticketctlrds.getHallTicket);
+app.get("/api/v2/conductexam/hallticket-4", conductexamhallticketctlrds.getHallTicket4);
+app.use("/api/v2/conductexam/supervisor-sheet-2", require("./controllers/supervisorsheet2ctlrds"));
+app.use("/api/v2/role-signatures", require("./controllers/rolewisesignaturectlrds"));
 app.post("/api/v2/conductexam/hallticket-blockchain-store", conductexamhallticketctlrds.storeHallTicketBlockchain);
 app.get("/api/v2/public/hallticket-blockchain-verify", conductexamhallticketctlrds.verifyHallTicketBlockchain);
 app.get("/api/v2/public/hallticket-verify", conductexamhallticketctlrds.verifyHallTicket);
@@ -6255,6 +6300,9 @@ app.get("/api/v2/conductexam/invigilator-student-attendance-options", conductexa
 app.get("/api/v2/conductexam/invigilator-room-students", conductexamctlrds.getInvigilatorRoomStudents);
 app.post("/api/v2/conductexam/mark-examroll-attendance", conductexamctlrds.markExamRollAttendance);
 app.post("/api/v2/conductexam/seat-allocation", conductexamctlrds.allocateExamSeats);
+app.use("/api/v2/conductexam/manual-seat-allocation", require("./controllers/manualseatallocationctlrds"));
+app.use("/api/v2/conductexam/block-assignment", require("./controllers/examblockassignmentctlrds"));
+app.post("/api/v2/conductexam/barcode-ai-format", require("./controllers/exambarcodedynamicctlrds").format);
 app.get("/api/v2/conductexam/scanning-options", conductexamscanningctlrds.options);
 app.get("/api/v2/conductexam/scanning-attended-students", conductexamscanningctlrds.attendedStudents);
 app.post("/api/v2/conductexam/scanning-assign", conductexamscanningctlrds.assign);
@@ -7194,6 +7242,7 @@ const mastergatewayctlrds = require("./controllers/mastergatewayctlrds");
 const icicigatewayconfigctlrds = require("./controllers/icicigatewayconfigctlrds");
 const icicipaymentprocessctlrds = require("./controllers/icicipaymentprocessctlrds");
 const cashfreectlrds = require("./controllers/cashfreectlrds");
+const skilldevelopmentzonectlrds = require("./controllers/skilldevelopmentzonectlrds");
 const studentonlinepaymentctlrds = require("./controllers/studentonlinepaymentctlrds");
 const parentportalctlrds = require("./controllers/parentportalctlrds");
 const repairmaintenancectlrds = require("./controllers/repairmaintenancectlrds");
@@ -7309,6 +7358,23 @@ app.post("/api/v2/repair-maintenance/duplicate-fees/list", repairmaintenancectlr
 app.get("/api/v2/repair-maintenance/user-to-counter-fee/options", repairmaintenancectlrds.userToCounterFeeOptions);
 app.post("/api/v2/repair-maintenance/user-to-counter-fee/list", repairmaintenancectlrds.listUserToCounterFee);
 app.post("/api/v2/repair-maintenance/user-to-counter-fee/update", repairmaintenancectlrds.updateUserToCounterFee);
+app.get("/api/v2/repair-maintenance/program-change/options", repairmaintenancectlrds.programChangeOptions);
+app.use("/api/v2/question-paper-indent", require("./controllers/questionpaperindentctlrds"));
+app.use("/api/v2/crm2", require("./controllers/crm2ctlrds"));
+app.use('/api/v2/crm2/config', require('./controllers/crm2configurationctlrds').router);
+app.use('/api/v2/crm2/lead-records', require('./controllers/crm2leadrecordsctlrds').router);
+app.use('/api/v2/crm2/applications', require('./controllers/crm2applicationsctlrds').router);
+app.use('/api/v2/lead-portal', require('./controllers/crm2leadportalctlrds').router);
+app.use('/api/v2/crm2-counselor-dashboard', require('./controllers/crm2counselordashboardctlrds').router);
+app.use('/api/v2/crm2-telecaller-dashboard', (req, res, next) => { req.telecallerDashboard = true; next(); }, require('./controllers/crm2counselordashboardctlrds').router);
+app.use('/api/v2/admission-scholarships', require('./controllers/admissionscholarshipctlrds'));
+app.use('/api/v2/crm2-admissions', require('./controllers/crm2admissionctlrds'));
+app.use("/api/v2/crm2-programs", require("./controllers/crm2programctlrds"));
+app.post("/api/v2/repair-maintenance/program-change/apply", repairmaintenancectlrds.applyProgramChange);
+app.get("/api/v2/repair-maintenance/selected-program-change/options", repairmaintenancectlrds.selectedProgramChangeOptions);
+app.post("/api/v2/repair-maintenance/selected-program-change/list", repairmaintenancectlrds.selectedProgramChangeList);
+app.post("/api/v2/repair-maintenance/selected-program-change/apply", repairmaintenancectlrds.selectedProgramChangeApply);
+app.post("/api/v2/repair-maintenance/change-academic-year/apply", repairmaintenancectlrds.changeStudentAcademicYear);
 app.get("/api/v2/programwiseaccess/options", programwiseaccessctlrds.options);
 app.get("/api/v2/programwiseaccess", programwiseaccessctlrds.list);
 app.post("/api/v2/programwiseaccess", programwiseaccessctlrds.save);
@@ -7457,12 +7523,50 @@ app.get("/api/v2/cashfree/config", cashfreectlrds.listConfigs);
 app.post("/api/v2/cashfree/config", cashfreectlrds.saveConfig);
 app.post("/api/v2/cashfree/config/delete", cashfreectlrds.deleteConfig);
 app.post("/api/v2/cashfree/order", cashfreectlrds.createOrder);
+app.use('/api/v2/skill-payment-link', require('./controllers/skillpaymentlinkctlrds').router);
 app.get("/api/v2/cashfree/verify", cashfreectlrds.verifyOrder);
 app.post("/api/v2/cashfree/verify", cashfreectlrds.verifyOrder);
 app.get("/api/v2/cashfree/logs", cashfreectlrds.listLogs);
 app.post("/api/v2/cashfree/logs", cashfreectlrds.listLogs);
 app.post("/api/v2/cashfree/callback", cashfreectlrds.callback);
 app.get("/api/v2/cashfree/callback", cashfreectlrds.callback);
+app.get("/api/v2/skill-development-zone/options", skilldevelopmentzonectlrds.options);
+app.get("/api/v2/skill-development-zone/exams", skilldevelopmentzonectlrds.listExams);
+app.post("/api/v2/skill-development-zone/exams", skilldevelopmentzonectlrds.saveExam);
+app.post("/api/v2/skill-development-zone/exams/delete", skilldevelopmentzonectlrds.deleteExam);
+app.post("/api/v2/skill-development-zone/exams/generate-questions", skilldevelopmentzonectlrds.generateQuestions);
+app.post("/api/v2/skill-development-zone/attempts/start", skilldevelopmentzonectlrds.startAttempt);
+app.post("/api/v2/skill-development-zone/attempts/save", skilldevelopmentzonectlrds.saveAttempt);
+app.post("/api/v2/skill-development-zone/attempts/submit", skilldevelopmentzonectlrds.submitAttempt);
+app.get("/api/v2/skill-development-zone/attempts", skilldevelopmentzonectlrds.listAttempts);
+app.get("/api/v2/skill-development-zone/access/status", skilldevelopmentzonectlrds.accessStatus);
+app.get("/api/v2/skill-development-zone/access/purchases", skilldevelopmentzonectlrds.listAccessPurchases);
+app.get("/api/v2/skill-development-zone/coupons/validate", skilldevelopmentzonectlrds.validateCoupon);
+app.post("/api/v2/skill-development-zone/access/activate-coupon", skilldevelopmentzonectlrds.activateCouponAccess);
+app.post("/api/v2/skill-development-zone/access/activate-paid", skilldevelopmentzonectlrds.activatePaidAccess);
+app.get("/api/v2/skill-development-zone/coupons", skilldevelopmentzonectlrds.listCoupons);
+app.post("/api/v2/skill-development-zone/coupons", skilldevelopmentzonectlrds.saveCoupon);
+app.post("/api/v2/skill-development-zone/coupons/delete", skilldevelopmentzonectlrds.deleteCoupon);
+app.get("/api/v2/skill-development-zone/certification-links", skilldevelopmentzonectlrds.listCertificationLinks);
+app.post("/api/v2/skill-development-zone/certification-links", skilldevelopmentzonectlrds.saveCertificationLink);
+app.post("/api/v2/skill-development-zone/certification-links/delete", skilldevelopmentzonectlrds.deleteCertificationLink);
+app.get("/api/v2/skill-development-zone/classes", skilldevelopmentzonectlrds.listClasses);
+app.post("/api/v2/skill-development-zone/classes", skilldevelopmentzonectlrds.saveClass);
+app.post("/api/v2/skill-development-zone/classes/delete", skilldevelopmentzonectlrds.deleteClass);
+app.post("/api/v2/skill-development-zone/classes/register", skilldevelopmentzonectlrds.registerClass);
+app.post("/api/v2/skill-development-zone/classes/cancel", skilldevelopmentzonectlrds.cancelClassRegistration);
+app.get("/api/v2/skill-development-zone/classes/registrations", skilldevelopmentzonectlrds.listClassRegistrations);
+app.post("/api/v2/skill-development-zone/classes/registrations/status", skilldevelopmentzonectlrds.updateClassRegistrationStatus);
+app.get("/api/v2/skill-development-zone/projects", skilldevelopmentzonectlrds.listProjects);
+app.post("/api/v2/skill-development-zone/projects", skilldevelopmentzonectlrds.saveProject);
+app.post("/api/v2/skill-development-zone/projects/delete", skilldevelopmentzonectlrds.deleteProject);
+app.post("/api/v2/skill-development-zone/projects/generate", skilldevelopmentzonectlrds.generateProject);
+app.post("/api/v2/skill-development-zone/projects/submit", skilldevelopmentzonectlrds.submitProject);
+app.post("/api/v2/skill-development-zone/projects/evaluate", skilldevelopmentzonectlrds.evaluateProject);
+app.post("/api/v2/skill-development-zone/projects/review", skilldevelopmentzonectlrds.reviewProject);
+app.get("/api/v2/skill-development-zone/project-submissions", skilldevelopmentzonectlrds.listProjectSubmissions);
+app.post("/api/v2/skill-development-zone/certificates/generate", skilldevelopmentzonectlrds.generateCertificate);
+app.get("/api/v2/skill-development-zone/certificates", skilldevelopmentzonectlrds.listCertificates);
 app.get("/api/v2/easebuzzpayment", easebuzzpaymentprocessctlrds.getEasebuzzPayments);
 app.post("/api/v2/easebuzzpayment/initiate", easebuzzpaymentprocessctlrds.initiateEasebuzzPayment);
 app.post("/api/v2/easebuzzpayment/callback", easebuzzpaymentprocessctlrds.handleEasebuzzPaymentCallback);
@@ -7475,6 +7579,14 @@ app.post("/api/v2/icicipayment/manual-success", icicipaymentprocessctlrds.markIc
 app.post("/api/v2/icicipayment/callback", icicipaymentprocessctlrds.handleIciciPaymentCallback);
 app.get("/api/v2/icicipayment/callback", icicipaymentprocessctlrds.handleIciciPaymentCallback);
 app.get("/api/v2/studentonlinepayment/pending", studentonlinepaymentctlrds.getPendingStudentFees);
+app.get('/api/v2/late-fee-policy-options', latefeepolicyctlrds.options);
+app.get('/api/v2/late-fee-policy', latefeepolicyctlrds.list);
+app.post('/api/v2/late-fee-policy', latefeepolicyctlrds.save);
+app.post('/api/v2/late-fee-policy-delete', latefeepolicyctlrds.remove);
+app.post('/api/v2/late-fee-policy-bulk', latefeepolicyctlrds.bulk);
+app.get('/api/v2/late-fees-ledger', latefeepolicyctlrds.ledger);
+app.get('/api/v2/studentonlinepayment3/pending', (req, res) => { req.onlineFees3 = true; return studentonlinepaymentctlrds.getPendingStudentFees(req, res); });
+app.post('/api/v2/studentonlinepayment3/session', (req, res) => { req.onlineFees3 = true; return studentonlinepaymentctlrds.createStudentPaymentSession(req, res); });
 app.post("/api/v2/studentonlinepayment/session", studentonlinepaymentctlrds.createStudentPaymentSession);
 app.get("/api/v2/studentonlinepayment", studentonlinepaymentctlrds.getStudentOnlinePayments);
 app.get("/api/v2/studentonlinepayment/options", studentonlinepaymentctlrds.getStudentOnlinePaymentOptions);
@@ -7493,6 +7605,10 @@ app.get("/api/v2/parent-portal/student-context", parentportalctlrds.studentConte
 app.post("/api/v2/addprconfigds2", prconfigdsctlr2.addprconfigds2);
 app.get("/api/v2/getprconfigds2", prconfigdsctlr2.getprconfigds2);
 app.post("/api/v2/updateprconfigds2", prconfigdsctlr2.updateprconfigds2);
+app.get('/api/v2/purchase2/pr-availability', purchase2crudctlrds.getPrAvailability);
+app.post('/api/v2/purchase2/po-from-pr', purchase2crudctlrds.createPoFromPr);
+app.post('/api/v2/purchase2/po-draft/save', purchase2crudctlrds.savePoDraft);
+app.post('/api/v2/purchase2/po-draft/action', purchase2crudctlrds.poAction);
 app.get("/api/v2/purchase2/:model", purchase2crudctlrds.getPurchase2Rows);
 app.post("/api/v2/purchase2/:model", purchase2crudctlrds.savePurchase2Row);
 app.post("/api/v2/purchase2/:model/delete", purchase2crudctlrds.deletePurchase2Row);
